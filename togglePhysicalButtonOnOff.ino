@@ -1,25 +1,44 @@
 // physical button press and light on off and  The LED toggles (ON → OFF → ON) on every button press.
 
-#define DDRB  (*(volatile unsigned char*)0x24)
-#define PORTB (*(volatile unsigned char*)0x25)
-#define PINB  (*(volatile unsigned char*)0x23)
-
-void delay() {
-    for (volatile long i = 0; i < 30000; i++);
+void setup() {
+    // Set PB4 as output (LED on Port B)
+    DDRB |= (1 << PB4); 
+    
+    // Set PD2 as input (Button on Port D)
+    DDRD &= ~(1 << PD2); 
 }
 
-int main() {
-    DDRB &= ~(1 << 2); // Button as input
-    DDRB |= (1 << 5);  // LED as output
-
-    while (1) {
-        if (!(PINB & (1 << 2))) { // Button pressed
-            delay(); // Debounce
-            if (!(PINB & (1 << 2))) {
-                PORTB ^= (1 << 5); // Toggle LED
-            }
-        }
+void loop() {
+    // Check if the button (PD2) is pressed (active low)
+    if (!(PIND & (1 << PD2))) {
+        PORTB &= ~(1 << PB4);
+        // Turn on LED (PB4)
+    } else {
+         PORTB |= (1 << PB4); // Turn off LED (PB4)
     }
+}
+
+
+
+========================
+
+
+// With inbuild functions
+
+void setup()
+{
+  pinMode(12,OUTPUT);
+  pinMode(2,INPUT);
+}
+void loop()
+{
+  if(digitalRead(2)==HIGH)
+  {
+    digitalWrite(12,HIGH);
+  }
+  else{
+    digitalWrite(12,LOW);
+  }
 }
 =======
 // bitbanging SPI Code
