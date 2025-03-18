@@ -1,0 +1,85 @@
+#define EEPROM_CS 10  // Chip Select (CS)
+#define EEPROM_CLK 13 // Serial Clock (SK)
+#define EEPROM_MOSI 11 // Data Input (DI)
+#define EEPROM_MISO 12 // Data Output (DO)
+
+// Function to generate clock pulses manually
+void pulseClock() {
+    digitalWrite(EEPROM_CLK, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(EEPROM_CLK, LOW);
+    delayMicroseconds(1);
+}
+
+// Function to send 9-bit commands (Opcode + Address)
+void sendCommand(uint16_t command) {
+    digitalWrite(EEPROM_CS, LOW);
+    for (int i = 8; i >= 0; i--) {
+        digitalWrite(EEPROM_MOSI, (command >> i) & 1);
+        pulseClock();
+    }
+}
+
+// Write Enable function (needed before writing)
+void EEPROMWriteEnable() {
+    sendCommand(0b110 << 6); // Opcode for Write Enable (110xxxxxx)
+    digitalWrite(EEPROM_CS, HIGH);
+    delayMicroseconds(1);
+}
+
+// Function to write a byte at a specific address
+void EEPROMWrite(int address, byte data) {
+    EEPROMWriteEnable(); // Enable Write before writing
+    sendCommand(0b101 << 6 | (address & 0x3F)); // Opcode for Write (101aaaaaa)
+    
+    for (int i = 7; i >= 0; i--) { // Send 8-bit data
+        digitalWrite(EEPROM_MOSI, (data >> i) & 1);
+        pulseClock();
+    }
+
+    digitalWrite(EEPROM_CS, HIGH);
+    delay(10); // Write cycle time
+}
+
+// Function to read a byte from a specific address
+byte EEPROMRead(int address) {
+    byte data = 0;
+    sendCommand(0b100 << 6 | (address & 0x3F)); // Opcode for Read (100aaaaaa)
+    
+    for (int i = 7; i >= 0; i--) { // Read 8-bit data
+        pulseClock();
+        data |= (digitalRead(EEPROM_MISO) << i);
+    }
+
+    digitalWrite(EEPROM_CS, HIGH);
+    return data;
+}
+
+void setup() {
+    Serial.begin(9600);
+
+    pinMode(EEPROM_CS, OUTPUT);
+    pinMode(EEPROM_CLK, OUTPUT);
+    pinMode(EEPROM_MOSI, OUTPUT);
+    pinMode(EEPROM_MISO, INPUT);
+    
+    digitalWrite(EEPROM_CS, HIGH);
+    digitalWrite(EEPROM_CLK, LOW);
+
+    Serial.println("Writing ASCII values to EEPROM...");
+    for (int i = 0; i < 128; i++) {
+        EEPROMWrite(i, i);
+        Serial.print("Written: ");
+        Serial.println((char)i);
+    }
+
+    Serial.println("Reading ASCII values from EEPROM...");
+    for (int i = 0; i < 128; i++) {
+        char readData = EEPROMRead(i);
+        Serial.print("Read: ");
+        Serial.println(readData);
+    }
+}
+
+void loop() {
+}
