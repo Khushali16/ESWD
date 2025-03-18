@@ -1,0 +1,70 @@
+/*  EEPROM24LC256 ASCII Read/Write
+ *  Modified to store and retrieve all 128 ASCII characters
+ */
+#include "Wire.h"
+#define disk1 0x50    // Default Address of 24LC256 EEPROM
+
+// Function to scan for I2C devices
+void scani2c() {
+    byte error, address;
+    int nDevices = 0;
+
+    Serial.println("Scanning...");
+    for (byte address = 1; address < 127; ++address) {
+        Wire.beginTransmission(address);
+        error = Wire.endTransmission();
+        if (error == 0) {
+            Serial.print("I2C device found at address 0x");
+            if (address < 16) Serial.print("0");
+            Serial.println(address, HEX);
+            ++nDevices;
+        }
+    }
+    Serial.println(nDevices == 0 ? "No I2C devices found\n" : "done\n");
+}
+
+// Write a character to EEPROM
+void EEPROMWriteChar(int disk, int eepromaddress, char character) {
+    Wire.beginTransmission(disk);
+    Wire.write((eepromaddress >> 8));   // MSB
+    Wire.write((eepromaddress & 0xFF)); // LSB
+    Wire.write(character);
+    Wire.endTransmission();
+    delay(10);
+}
+
+// Read a character from EEPROM
+char EEPROMReadChar(int disk, int eepromaddress) {
+    Wire.beginTransmission(disk);
+    Wire.write(eepromaddress >> 8);   // MSB
+    Wire.write(eepromaddress & 0xFF); // LSB
+    Wire.endTransmission();
+    Wire.requestFrom(disk, 1);  // Request 1 byte
+    return Wire.available() ? Wire.read() : '\0';
+}
+
+void setup() {
+    Serial.begin(9600);
+    Serial.println("EEPROM24LC256 ASCII Read/Write");
+    Wire.begin();
+    scani2c();
+    
+    // Writing all 128 ASCII characters
+    Serial.println("Writing all ASCII values:");
+    for (int i = 0; i < 128; i++) {
+        EEPROMWriteChar(disk1, i, (char)i);
+        Serial.print("Written: ");
+        Serial.println((char)i);
+    }
+
+    // Reading all 128 ASCII characters
+    Serial.println("Reading all ASCII values:");
+    for (int i = 0; i < 128; i++) {
+        char readChar = EEPROMReadChar(disk1, i);
+        Serial.print("Read: ");
+        Serial.println(readChar);
+    }
+}
+
+void loop() {
+}
