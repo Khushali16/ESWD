@@ -2,3 +2,10 @@ REF SITE - https://www.digitaltown.co.uk/components1524LC256EEPROM.php
 CODE USING ONLY WIRE LIBRARY - https://www.digitaltown.co.uk/inofiles/Components/EEPROM/EEPROM24LC256v1/EEPROM24LC256v1.ino
 https://youtu.be/DQQJGCixgvU?si=-D9ni7sQ5wlCsmjk
 
+CS	Chip Select (Active High)	D10
+SK (CLK)	Serial Clock	D13
+DI (MOSI)	Data Input	D11
+DO (MISO)	Data Output	D12
+GND	Ground	GND
+VCC	Power Supply (2.5V - 5.5V)	5V
+ORG	Internal Organization	GND (for 8-bit mode)
